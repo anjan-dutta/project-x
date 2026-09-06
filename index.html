@@ -116,7 +116,7 @@
         </div>
         <div class="card">
           <h3>Deploys on push</h3>
-          <p>A GitHub Actions workflow publishes every commit to <code>main</code> automatically.</p>
+          <p>GitHub Pages serves <code>main</code> directly, so a commit is live about a minute later.</p>
         </div>
         <div class="card">
           <h3>Light and dark</h3>
@@ -132,7 +132,7 @@
       <ol>
         <li><strong>Replace this copy.</strong> Everything visible lives in <code>index.html</code>.</li>
         <li><strong>Add pages</strong> as sibling files: <code>about.html</code> is reachable at <code>/about.html</code>.</li>
-        <li><strong>Bring a framework</strong> later by pointing the workflow's upload step at your build output directory instead of the repository root.</li>
+        <li><strong>Bring a framework</strong> later by adding a build workflow and switching the Pages source from a branch over to GitHub Actions.</li>
         <li><strong>Use a custom domain</strong> from Settings &rarr; Pages, which writes a <code>CNAME</code> file for you.</li>
       </ol>
     </section>

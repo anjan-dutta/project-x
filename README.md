@@ -9,7 +9,6 @@ A static site hosted on [GitHub Pages](https://pages.github.com/).
 | Path | Purpose |
 | --- | --- |
 | `index.html` | The whole site: markup, styles, and content in one file |
-| `.github/workflows/deploy-pages.yml` | Publishes `main` to Pages on every push |
 | `.nojekyll` | Skips Jekyll processing so files beginning with `_` are served as-is |
 
 ## Working on it
@@ -25,28 +24,42 @@ Then visit http://localhost:8000.
 
 ## Deploying
 
-Push to `main`. The workflow uploads the repository root as the Pages artifact
-and deploys it, usually within a minute. Progress is visible under the repo's
-**Actions** tab.
-
-The first run also enables Pages itself (`actions/configure-pages` is set to
-`enablement: true`), so there is no setting to flip by hand.
+Push to `main`. Pages is configured with **Settings → Pages → Source: Deploy
+from a branch**, set to `main` at `/ (root)`, so GitHub serves the repository
+contents directly. A push is usually live within a minute. Build progress shows
+up under the repo's **Actions** tab as a `pages build and deployment` run.
 
 ## Adding a build step later
 
-If the site grows into something that compiles (Vite, Astro, Hugo), add the
-build to the workflow before the upload step and point `path:` at the output
-directory instead of `.`:
+Serving from a branch only works while the site is committed as-is. Once it
+compiles (Vite, Astro, Hugo), switch **Settings → Pages → Source** to **GitHub
+Actions** and add a workflow that builds and uploads the output:
 
 ```yaml
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v5
       - run: npm ci && npm run build
+      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+      - uses: actions/deploy-pages@v4
 ```
+
+That route needs **Settings → Actions → General → Workflow permissions** set to
+*Read and write permissions*; without it the token cannot publish to Pages.
 
 ## Custom domain
 
 Add it under **Settings → Pages → Custom domain**. GitHub commits a `CNAME`
-file to the repo, and the workflow will keep serving it with the rest of the
-site.
+file to the repo and serves the site from that hostname.
