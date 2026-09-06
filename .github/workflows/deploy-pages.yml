@@ -23,7 +23,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # enablement:true turns Pages on for the repo the first time this runs,
       # so no manual toggle in Settings is needed.
