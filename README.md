@@ -1,65 +1,53 @@
-# Project X
+# Procurement Timing Engine
 
-A static site hosted on [GitHub Pages](https://pages.github.com/).
+System design for a product that tells a factory **which raw material to order,
+how much, and by what date**, from its own consumption history, its suppliers'
+actual reliability, and what is happening in the world.
 
-**Live site:** https://anjan-dutta.github.io/project-x/
+**Read it:** https://anjan-dutta.github.io/project-x/
 
-## Layout
+## The premise
+
+"When should I buy" is not a prediction. It is a decision that falls out of two
+predictions plus a policy. Modelling the purchase date directly is the common
+failure, because the date is not a property of the world, it is the output of
+the policy you choose.
+
+So the system forecasts **consumption** and **lead time** as distributions, then
+lets inventory theory convert them into a reorder decision. Global events do not
+enter as model features; they shift the parameters of those two distributions.
+
+## The four layers
+
+| | Layer | Approach |
+| --- | --- | --- |
+| L1 | Demand, as a distribution | BOM explosion inside the MRP horizon; Croston/TSB, ETS/ARIMA or quantile LightGBM beyond it, chosen by demand pattern |
+| L2 | Lead time, with its variance | Per supplier-material distribution fitted from promised vs actual |
+| L3 | The policy that produces a date | Reorder point and safety stock; Monte Carlo for A-class items |
+| L4 | The event overlay | Signals scored into a fixed schema, then a hand-authored transmission map to parameter deltas |
+
+## Repository layout
 
 | Path | Purpose |
 | --- | --- |
-| `index.html` | The whole site: markup, styles, and content in one file |
+| `index.html` | The design document, self-contained: markup, styles and diagram in one file |
 | `.nojekyll` | Skips Jekyll processing so files beginning with `_` are served as-is |
 
-## Working on it
-
-There is no build step and no dependencies. Open `index.html` in a browser, or
-serve the directory if you want a real origin:
+No build step and no dependencies. Open `index.html` in a browser, or serve the
+directory if you want a real origin:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then visit http://localhost:8000.
-
 ## Deploying
 
-Push to `main`. Pages is configured with **Settings → Pages → Source: Deploy
-from a branch**, set to `main` at `/ (root)`, so GitHub serves the repository
-contents directly. A push is usually live within a minute. Build progress shows
-up under the repo's **Actions** tab as a `pages build and deployment` run.
+Push to `main`. Pages serves the repository root directly via
+**Settings → Pages → Source: Deploy from a branch**, set to `main` at `/ (root)`.
+Builds appear in the Actions tab as `pages build and deployment`.
 
-## Adding a build step later
+## Status
 
-Serving from a branch only works while the site is committed as-is. Once it
-compiles (Vite, Astro, Hugo), switch **Settings → Pages → Source** to **GitHub
-Actions** and add a workflow that builds and uploads the output:
-
-```yaml
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-    steps:
-      - uses: actions/checkout@v5
-      - run: npm ci && npm run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-      - uses: actions/deploy-pages@v4
-```
-
-That route needs **Settings → Actions → General → Workflow permissions** set to
-*Read and write permissions*; without it the token cannot publish to Pages.
-
-## Custom domain
-
-Add it under **Settings → Pages → Custom domain**. GitHub commits a `CNAME`
-file to the repo and serves the site from that hostname.
+Design only. Nothing here is implemented yet. Figures for holding cost and
+stockout ratios are standard industry ranges, to be replaced with real customer
+data once available.

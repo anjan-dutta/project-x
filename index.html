@@ -3,146 +3,485 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Project X</title>
-<meta name="description" content="Project X — a static site hosted on GitHub Pages.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9889;</text></svg>">
+<meta name="description" content="System design for a raw-materials procurement timing engine: demand and lead-time forecasting, inventory policy, and a global-event overlay.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8F%AD</text></svg>">
+<title>Procurement Timing Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
   :root {
-    --bg: #fbfbfa;
-    --panel: #ffffff;
-    --fg: #1a1a19;
-    --muted: #6b6b66;
-    --line: #e3e3df;
-    --accent: #c05620;
+    color-scheme: light dark;
+    --paper:      #F5F7F9;
+    --surface:    #FFFFFF;
+    --ink:        #14181F;
+    --muted:      #5A626D;
+    --faint:      #858D98;
+    --line:       #DCE1E7;
+    --line-soft:  #E9EDF1;
+    --accent:     #C0561A;
+    --accent-dim: #F2E3DA;
+    --ok:         #2C6A4C;
+    --warn:       #97681A;
+    --crit:       #A33A2E;
+
+    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #161614;
-      --panel: #1e1e1c;
-      --fg: #ececea;
-      --muted: #9a9a93;
-      --line: #302f2c;
-      --accent: #e08a52;
+    :root:not([data-theme="light"]) {
+      --paper:      #0F1318;
+      --surface:    #161B22;
+      --ink:        #E4E8ED;
+      --muted:      #99A2AE;
+      --faint:      #6E7885;
+      --line:       #262D37;
+      --line-soft:  #1E242C;
+      --accent:     #E8823C;
+      --accent-dim: #33221A;
+      --ok:         #5FA783;
+      --warn:       #C9A03F;
+      --crit:       #D9705F;
     }
   }
+  :root[data-theme="dark"] {
+    --paper:      #0F1318;
+    --surface:    #161B22;
+    --ink:        #E4E8ED;
+    --muted:      #99A2AE;
+    --faint:      #6E7885;
+    --line:       #262D37;
+    --line-soft:  #1E242C;
+    --accent:     #E8823C;
+    --accent-dim: #33221A;
+    --ok:         #5FA783;
+    --warn:       #C9A03F;
+    --crit:       #D9705F;
+  }
+
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px; }
-  header { padding: 96px 0 56px; }
-  .eyebrow {
-    font-size: 12px;
-    letter-spacing: .14em;
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+  .col { max-width: 66ch; }
+
+  /* ---- masthead ---- */
+  header { padding: 64px 0 40px; }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .1em;
     text-transform: uppercase;
     color: var(--accent);
-    font-weight: 600;
-    margin: 0 0 16px;
+    margin: 0 0 18px;
   }
   h1 {
-    font-size: clamp(38px, 8vw, 60px);
-    line-height: 1.05;
-    letter-spacing: -.03em;
-    margin: 0 0 20px;
-    font-weight: 640;
+    font-size: clamp(34px, 5.6vw, 46px);
+    line-height: 1.08;
+    letter-spacing: -.025em;
+    font-weight: 600;
+    margin: 0 0 18px;
+    text-wrap: balance;
   }
-  .lede { font-size: 19px; color: var(--muted); margin: 0 0 32px; max-width: 58ch; }
-  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-  .btn {
-    display: inline-block;
-    padding: 10px 18px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 15px;
+  .standfirst { font-size: 18.5px; color: var(--muted); margin: 0; max-width: 60ch; }
+
+  /* ---- premise ---- */
+  .premise {
+    border-left: 3px solid var(--accent);
+    padding: 4px 0 4px 24px;
+    margin: 0 0 8px;
+  }
+  .premise p { margin: 0 0 12px; max-width: 62ch; }
+  .premise p:last-child { margin-bottom: 0; }
+  .premise strong { font-weight: 600; }
+
+  /* ---- sections ---- */
+  section { padding: 44px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: 0; }
+  h2 {
+    font-size: 12px;
+    font-family: var(--mono);
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--faint);
     font-weight: 500;
-    border: 1px solid var(--line);
-    color: var(--fg);
-    background: var(--panel);
-    transition: border-color .15s ease, transform .15s ease;
+    margin: 0 0 22px;
   }
-  .btn:hover { border-color: var(--accent); transform: translateY(-1px); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn.primary:hover { opacity: .9; }
-  hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
-  section { padding: 56px 0; }
-  h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 24px; font-weight: 600; }
-  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
-  .card h3 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
-  .card p { margin: 0; color: var(--muted); font-size: 15px; }
-  ol { padding-left: 20px; margin: 0; }
-  ol li { margin-bottom: 10px; color: var(--muted); }
-  ol li strong { color: var(--fg); font-weight: 600; }
-  code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 13.5px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 5px;
+  h3 { font-size: 17px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em; }
+  p { margin: 0 0 16px; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ---- figure ---- */
+  figure { margin: 0; }
+  .figbox { overflow-x: auto; padding-bottom: 4px; }
+  svg { max-width: 100%; height: auto; display: block; min-width: 640px; }
+  figcaption {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 16px;
+    max-width: 62ch;
+  }
+
+  /* ---- layer list ---- */
+  .layers { display: flex; flex-direction: column; gap: 0; }
+  .layer {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 20px;
+    padding: 22px 0;
+    border-top: 1px solid var(--line-soft);
+  }
+  .layer:first-child { border-top: 0; padding-top: 0; }
+  .layer-id {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    padding-top: 2px;
+  }
+  .layer p { color: var(--muted); margin: 0 0 10px; max-width: 58ch; }
+  .layer p:last-child { margin-bottom: 0; }
+  .pick {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--line-soft);
+    border-radius: 3px;
     padding: 1px 6px;
   }
-  footer { padding: 40px 0 72px; color: var(--muted); font-size: 14px; }
-  footer a { color: var(--muted); }
+
+  /* ---- formulas ---- */
+  .formula {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.9;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 0 0 14px;
+    white-space: pre;
+    color: var(--ink);
+  }
+  .formula .cm { color: var(--faint); }
+
+  /* ---- table ---- */
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 520px; }
+  th, td { text-align: left; padding: 11px 14px 11px 0; vertical-align: top; border-bottom: 1px solid var(--line-soft); }
+  th {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 500;
+    border-bottom: 1px solid var(--line);
+  }
+  td:first-child { font-weight: 500; padding-right: 28px; white-space: nowrap; }
+  td.note { color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+
+  /* ---- phases ---- */
+  .phases { display: flex; flex-direction: column; gap: 2px; counter-reset: ph; }
+  .phase {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 18px;
+    align-items: baseline;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .phase:last-child { border-bottom: 0; }
+  .phase-n {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--faint);
+  }
+  .phase b { font-weight: 600; }
+  .phase span { color: var(--muted); }
+
+  /* ---- risks ---- */
+  .risks { display: flex; flex-direction: column; gap: 18px; }
+  .risk { display: grid; grid-template-columns: 92px 1fr; gap: 20px; align-items: start; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  .chip.k { color: var(--crit); }
+  .chip.w { color: var(--warn); }
+  .chip.o { color: var(--ok); }
+  .risk div:last-child { color: var(--muted); max-width: 58ch; }
+  .risk b { color: var(--ink); font-weight: 600; }
+
+  /* ---- stack ---- */
+  .stack { display: grid; grid-template-columns: 190px 1fr; gap: 12px 24px; font-size: 15px; }
+  .stack dt { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+  .stack dd { margin: 0; color: var(--muted); }
+
+  footer {
+    padding: 36px 0 72px;
+    border-top: 1px solid var(--line);
+    color: var(--faint);
+    font-size: 13.5px;
+  }
+
+  @media (max-width: 620px) {
+    .wrap { padding: 0 20px; }
+    .layer { grid-template-columns: 1fr; gap: 6px; }
+    .risk { grid-template-columns: 1fr; gap: 8px; }
+    .stack { grid-template-columns: 1fr; gap: 4px 0; }
+    .stack dd { margin-bottom: 12px; }
+  }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <p class="eyebrow">Project X</p>
-      <h1>Something new is being built here.</h1>
-      <p class="lede">
-        This page is served straight from the <code>main</code> branch of the
-        <a href="https://github.com/anjan-dutta/project-x">project-x</a> repository by GitHub Pages.
-        Edit <code>index.html</code>, push, and the change is live in about a minute.
-      </p>
-      <div class="actions">
-        <a class="btn primary" href="https://github.com/anjan-dutta/project-x">View the repository</a>
-        <a class="btn" href="https://github.com/anjan-dutta/project-x/edit/main/index.html">Edit this page</a>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">System design / raw materials procurement</p>
+    <h1>Procurement Timing Engine</h1>
+    <p class="standfirst">Tells a factory which raw material to order, how much, and by what date, given its own consumption history, its suppliers' actual reliability, and what is happening in the world.</p>
+  </header>
+
+  <section>
+    <h2>The premise</h2>
+    <div class="premise">
+      <p><strong>"When should I buy" is not a prediction.</strong> It is a decision that falls out of two predictions plus a policy. Modelling the purchase date directly is the common failure, because the date is not a property of the world, it is the output of the policy you choose.</p>
+      <p>So the system forecasts <strong>consumption</strong> and <strong>lead time</strong> as distributions, then lets inventory theory convert them into a reorder decision. Global events do not enter as model features. They shift the parameters of those two distributions.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>How it fits together</h2>
+    <figure>
+      <div class="figbox">
+        <svg viewBox="0 0 880 320" role="img" aria-label="Consumption history and supplier delivery logs are fitted into demand and lead-time distributions, which feed a Monte Carlo simulation that outputs an order date and quantity. A separate event pipeline of global signals, Claude extraction, and a transmission map feeds upward into the fitted parameters, shifting their mean and standard deviation." font-family="IBM Plex Sans, system-ui, sans-serif">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+            <marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="#C0561A"></path>
+            </marker>
+          </defs>
+
+          <g fill="none" stroke="currentColor" stroke-width="1.25" opacity="0.85">
+            <rect x="20"  y="24"  width="180" height="54" rx="3"></rect>
+            <rect x="20"  y="96"  width="180" height="54" rx="3"></rect>
+            <rect x="250" y="42"  width="190" height="90" rx="3"></rect>
+            <rect x="490" y="42"  width="160" height="90" rx="3"></rect>
+            <rect x="700" y="42"  width="160" height="90" rx="3"></rect>
+            <rect x="20"  y="230" width="180" height="52" rx="3"></rect>
+            <rect x="250" y="230" width="190" height="52" rx="3"></rect>
+            <rect x="490" y="230" width="190" height="52" rx="3"></rect>
+          </g>
+
+          <g fill="currentColor" font-size="12.5" text-anchor="middle">
+            <text x="110" y="46">Consumption history</text>
+            <text x="110" y="63" font-size="11.5" opacity="0.62">+ BOM, production plan</text>
+            <text x="110" y="118">Supplier delivery log</text>
+            <text x="110" y="135" font-size="11.5" opacity="0.62">promised vs actual</text>
+
+            <text x="345" y="72" font-weight="500">Fitted parameters</text>
+            <text x="345" y="97" font-family="IBM Plex Mono, monospace" font-size="12">D ~ f(t)</text>
+            <text x="345" y="115" font-family="IBM Plex Mono, monospace" font-size="12">L ~ g(&#952;)</text>
+
+            <text x="570" y="82">Monte Carlo</text>
+            <text x="570" y="100" font-size="11.5" opacity="0.62">10k paths</text>
+
+            <text x="780" y="76" font-weight="500">Order by date</text>
+            <text x="780" y="95" font-size="11.5" opacity="0.62">qty Q, service level &#945;</text>
+
+            <text x="110" y="252">Global signals</text>
+            <text x="110" y="269" font-size="11.5" opacity="0.62">GDELT, prices, freight</text>
+            <text x="345" y="252">Claude: extract, dedupe</text>
+            <text x="345" y="269" font-size="11.5" opacity="0.62">score to fixed schema</text>
+            <text x="585" y="252">Transmission map</text>
+            <text x="585" y="269" font-size="11.5" opacity="0.62">event &#8594; affected node</text>
+          </g>
+
+          <g fill="none" stroke="currentColor" stroke-width="1.25" opacity="0.85">
+            <path d="M 200 51 H 225 V 87" ></path>
+            <path d="M 200 123 H 225 V 87"></path>
+            <path d="M 225 87 H 244" marker-end="url(#ar)"></path>
+            <path d="M 440 87 H 484" marker-end="url(#ar)"></path>
+            <path d="M 650 87 H 694" marker-end="url(#ar)"></path>
+            <path d="M 200 256 H 244" marker-end="url(#ar)"></path>
+            <path d="M 440 256 H 484" marker-end="url(#ar)"></path>
+          </g>
+
+          <g fill="none" stroke="#C0561A" stroke-width="1.75">
+            <path d="M 585 230 V 180 H 345 V 140" marker-end="url(#arA)"></path>
+          </g>
+          <text x="465" y="171" fill="#C0561A" font-size="12" font-family="IBM Plex Mono, monospace" text-anchor="middle">shifts &#956;, &#963;</text>
+        </svg>
       </div>
-    </header>
+      <figcaption>The single orange edge is the whole thesis. Event signals adjust the parameters the simulator draws from; they are never features inside the demand model.</figcaption>
+    </figure>
+  </section>
 
-    <hr>
+  <section>
+    <h2>The four layers</h2>
+    <div class="layers">
 
-    <section>
-      <h2>What's set up</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>Zero build step</h3>
-          <p>Plain HTML and CSS in one file. No bundler, no dependencies, nothing to install.</p>
-        </div>
-        <div class="card">
-          <h3>Deploys on push</h3>
-          <p>GitHub Pages serves <code>main</code> directly, so a commit is live about a minute later.</p>
-        </div>
-        <div class="card">
-          <h3>Light and dark</h3>
-          <p>The palette follows the reader's system theme through <code>prefers-color-scheme</code>.</p>
+      <div class="layer">
+        <div class="layer-id">L1</div>
+        <div>
+          <h3>Demand, as a distribution</h3>
+          <p>Raw material demand is <em>derived</em>, not independent. Inside the MRP horizon you do not forecast at all: you explode the production plan through the bill of materials and adjust for scrap yield. Beyond it, you forecast.</p>
+          <p>Segment first by ABC value and demand pattern (ADI against CV&#178;). <span class="pick">statsforecast</span> ETS/ARIMA for smooth series, <span class="pick">LightGBM</span> with quantile loss where covariates matter, <span class="pick">Croston / TSB</span> for intermittent items. That last case is not an edge case: many raw materials are ordered a handful of times a year, and ARIMA on a mostly-zero series produces confident nonsense.</p>
         </div>
       </div>
-    </section>
 
-    <hr>
+      <div class="layer">
+        <div class="layer-id">L2</div>
+        <div>
+          <h3>Lead time, with its variance</h3>
+          <p>Fit a distribution per supplier and material from promised-versus-actual history; log-normal fits observed lead times well. Lead time <em>variability</em> usually dominates demand variability here. A supplier averaging 30 days &#177;12 needs far more buffer than one averaging 40 days &#177;2.</p>
+        </div>
+      </div>
 
-    <section>
-      <h2>Making it yours</h2>
-      <ol>
-        <li><strong>Replace this copy.</strong> Everything visible lives in <code>index.html</code>.</li>
-        <li><strong>Add pages</strong> as sibling files: <code>about.html</code> is reachable at <code>/about.html</code>.</li>
-        <li><strong>Bring a framework</strong> later by adding a build workflow and switching the Pages source from a branch over to GitHub Actions.</li>
-        <li><strong>Use a custom domain</strong> from Settings &rarr; Pages, which writes a <code>CNAME</code> file for you.</li>
-      </ol>
-    </section>
+      <div class="layer">
+        <div class="layer-id">L3</div>
+        <div>
+          <h3>The policy that produces a date</h3>
+          <p>Reorder point and safety stock give the closed form. For A-class items, replace the division with a Monte Carlo that samples both distributions forward and finds the latest order date holding stockout probability under target. Simulation handles lumpy demand and price breaks the formula cannot.</p>
+        </div>
+      </div>
 
-    <hr>
+      <div class="layer">
+        <div class="layer-id">L4</div>
+        <div>
+          <h3>The event overlay</h3>
+          <p>Claude reads global signals into a fixed schema, deduplicates across the hundreds of articles one event generates, and scores mechanism, magnitude, onset and duration. A hand-authored transmission map turns that into parameter deltas: <em>port disruption at Rotterdam &#8594; lanes through Rotterdam &#8594; lead time +12d, &#963; +8d, decaying over 45 days</em>.</p>
+          <p>Hand-authored, because you cannot train this. Major disruptions are rare, so you have perhaps ten to twenty per commodity across all history. That is an anecdote collection, not a training set.</p>
+        </div>
+      </div>
 
-    <footer>
-      Built with GitHub Pages &middot;
-      <a href="https://github.com/anjan-dutta/project-x">anjan-dutta/project-x</a>
-    </footer>
-  </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The decision math</h2>
+    <div class="col">
+      <div class="formula"><span class="cm">// reorder point</span>
+ROP = (avg daily demand &#215; lead time) + safety stock
+
+<span class="cm">// safety stock, both variances</span>
+SS  = z &#215; &#8730;( LT&#183;&#963;&#178;_demand  +  demand&#178;&#183;&#963;&#178;_LT )
+
+<span class="cm">// the answer the user actually sees</span>
+days_to_order = (inventory_position &#8722; ROP) / forecast_daily_use
+
+inventory_position = on_hand + on_order &#8722; allocated &#8722; backorders</div>
+      <p>The second term inside the root is the one people drop. Without it you buffer against demand noise and get blindsided by a supplier who is merely inconsistent.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Parameters that carry weight</h2>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Group</th><th>What matters</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Demand</td>
+            <td class="note">Bill of materials and production plan (the highest-value input you can obtain), open orders and backlog, consumption history, scrap and yield rate, seasonality, lifecycle stage</td>
+          </tr>
+          <tr>
+            <td>Supply</td>
+            <td class="note">Lead time mean <em>and</em> &#963; per supplier-material, on-time delivery rate, MOQ and lot increments, supplier capacity, single versus multi-source, customs and port dwell for imports</td>
+          </tr>
+          <tr>
+            <td>Inventory</td>
+            <td class="note">On-hand, in-transit with ETAs, allocated, shelf life and expiry, storage capacity and special handling</td>
+          </tr>
+          <tr>
+            <td>Economics</td>
+            <td class="note">Holding cost at 15&#8211;30% of unit value per year, ordering cost per PO, price-break tiers, working capital ceiling, and <em>line-down cost per hour</em></td>
+          </tr>
+          <tr>
+            <td>External</td>
+            <td class="note">Commodity indices, price volatility and futures curve, FX on imported inputs, freight and container rates, tariffs and export controls, sector PMI</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:18px;max-width:62ch;color:var(--muted)">Stockout cost typically runs 10&#8211;100&#215; holding cost. That asymmetry is why the optimal policy deliberately over-stocks relative to a naive cost-minimiser. Encode it explicitly or the model will look accurate and lose the customer money.</p>
+  </section>
+
+  <section>
+    <h2>Build sequence</h2>
+    <p style="max-width:62ch;color:var(--muted);margin-bottom:20px">Each step depends on the one before it. Step 1 alone beats the spreadsheet-and-instinct process most mid-size factories run on, and it is the fastest route to something demonstrable.</p>
+    <div class="phases">
+      <div class="phase"><span class="phase-n">01</span><div><b>ABC/XYZ segmentation plus ROP with safety stock.</b> <span>Computed from historical consumption. No machine learning at all.</span></div></div>
+      <div class="phase"><span class="phase-n">02</span><div><b>Probabilistic demand forecasts and fitted lead-time distributions.</b> <span>Per segment, with the model chosen by demand pattern.</span></div></div>
+      <div class="phase"><span class="phase-n">03</span><div><b>BOM and production-plan integration.</b> <span>Converts near-horizon guessing into arithmetic.</span></div></div>
+      <div class="phase"><span class="phase-n">04</span><div><b>Event overlay and commodity signals.</b> <span>Strategic buy-forward timing on top of a system that already works without it.</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What kills this</h2>
+    <div class="risks">
+      <div class="risk">
+        <div><span class="chip k">Cold start</span></div>
+        <div><b>A new factory has no history in your system, so the model is worthless on day one.</b> Onboarding has to ingest their existing ERP or Tally consumption data, and you need a defensible rules-based fallback for the first months. Solve this before the modelling, because it decides whether anyone ever sees the modelling.</div>
+      </div>
+      <div class="risk">
+        <div><span class="chip k">Leakage</span></div>
+        <div><b>The event store must be append-only and queryable as of any past timestamp.</b> Backtests may use only what was published before <em>t</em>. Look-ahead leakage is trivially easy to introduce here and produces a spectacular backtest followed by a worthless product.</div>
+      </div>
+      <div class="risk">
+        <div><span class="chip w">False alarms</span></div>
+        <div><b>Optimise for precision, not recall.</b> A missed disruption costs a line-down, but a false alarm costs working capital <em>and</em> trust. Cry wolf three times and the feature gets switched off. Ship narrow and correct.</div>
+      </div>
+      <div class="risk">
+        <div><span class="chip w">Wrong metric</span></div>
+        <div><b>Judge on service level, fill rate, stockout days, inventory turns and total cost</b>, never forecast accuracy alone. For the forecast itself use MASE or pinball loss. MAPE is undefined on zero-demand periods, so it breaks precisely on the intermittent items that matter most.</div>
+      </div>
+      <div class="risk">
+        <div><span class="chip o">The moat</span></div>
+        <div><b>Multi-tier supplier mapping and the decision log.</b> Your customer knows their suppliers but not their suppliers' suppliers, and tier-2 exposure is where disruptions originate. Log every recommendation and outcome from day one: it is your calibration set, and in eighteen months nobody can retroactively acquire it.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Stack</h2>
+    <dl class="stack">
+      <dt>Forecasting</dt><dd>Python service (FastAPI) with statsforecast and LightGBM, plus a nightly job writing forecasts to a collection the BFF reads. Node has no serious forecasting ecosystem, so this stays a separate process.</dd>
+      <dt>claude-opus-5</dt><dd>Event extraction and impact reasoning, with structured outputs for the schema and <span class="pick">strict: true</span> on tools. Adaptive thinking; effort tuned per route.</dd>
+      <dt>Message Batches</dt><dd>Nightly bulk article scoring at 50% cost. The workload is not latency-sensitive, so this fits exactly.</dd>
+      <dt>Prompt caching</dt><dd>On the taxonomy, schema and system prompt, which are byte-identical across every article.</dd>
+      <dt>Web search</dt><dd>On-demand investigation of a named supplier or commodity when an analyst drills in, domain-restricted.</dd>
+      <dt>Event store</dt><dd>Append-only, timestamped, point-in-time queryable. Embeddings and a vector store for deduplication and analogue retrieval.</dd>
+      <dt>Voice reporting</dt><dd>Web Speech API in the browser into a tool-use route on the existing Express BFF. Tools wrap existing controllers; the model never emits queries.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    Design notes, September 2026. Figures for holding cost and stockout ratios are standard industry ranges, to be replaced with the customer's own once available.
+  </footer>
+
+</div>
 </body>
 </html>
