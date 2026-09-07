@@ -30,7 +30,9 @@ enter as model features; they shift the parameters of those two distributions.
 
 | Path | Purpose |
 | --- | --- |
-| `index.html` | The design document, self-contained: markup, styles and diagram in one file |
+| `index.html` | The system design: the four layers, the decision math, the build sequence |
+| `market-research.html` | Published evidence on supply chain risk for Indian manufacturers under Rs 100 crore, with sources |
+| `style.css` | Shared design tokens and components for both pages |
 | `.nojekyll` | Skips Jekyll processing so files beginning with `_` are served as-is |
 
 No build step and no dependencies. Open `index.html` in a browser, or serve the
@@ -45,6 +47,17 @@ python3 -m http.server 8000
 Push to `main`. Pages serves the repository root directly via
 **Settings → Pages → Source: Deploy from a branch**, set to `main` at `/ (root)`.
 Builds appear in the Actions tab as `pages build and deployment`.
+
+## Market research
+
+`market-research.html` collects published evidence that the problem is real:
+price volatility is the top procurement challenge for Indian MSMEs (55.7% of
+27,000+ surveyed), the average invoice payment cycle runs 73 days against a
+45-day statutory limit, and manufacturers held only 2-4 weeks of rare-earth
+magnet cover during the 2025 export-control episode.
+
+Every figure names its study and sample size. Read the provenance note at the
+top of that page before quoting any of it.
 
 ## Status
 
