@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Live demo: speak a procurement command and see it transcribed in the browser, using the Web Speech API with no backend.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8F%AD</text></svg>">
+<title>Voice Capture Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="sitenav">
+    <a href="./">System design</a>
+    <a href="market-research.html">Market research</a>
+    <a href="demo.html" aria-current="page">Demo</a>
+  </nav>
+
+  <header>
+    <p class="kicker">Demo / speech to text</p>
+    <h1>Say a command, watch it land</h1>
+    <p class="standfirst">The first stage of the voice reporting path, running entirely in your browser. Press the button, speak a procurement request, and the transcript appears below as you talk.</p>
+  </header>
+
+  <section>
+    <div class="demo-status" id="status" role="status">
+      <p>Checking browser support...</p>
+    </div>
+
+    <div class="controls">
+      <button class="mic" id="micBtn" data-listening="false" disabled>
+        <span class="dot" aria-hidden="true"></span>
+        <span id="micLabel">Start listening</span>
+      </button>
+
+      <div class="field">
+        <label for="lang">Language</label>
+        <select id="lang">
+          <option value="en-IN" selected>English (India)</option>
+          <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="hi-IN">Hindi</option>
+          <option value="ta-IN">Tamil</option>
+          <option value="mr-IN">Marathi</option>
+        </select>
+      </div>
+
+      <button class="btn-min" id="copyBtn" disabled>Copy</button>
+      <button class="btn-min" id="clearBtn" disabled>Clear</button>
+    </div>
+
+    <div class="transcript" id="transcript" aria-live="polite" aria-atomic="false">
+      <span class="placeholder" id="placeholder">Try: "show me steel rod consumption for the last three months"</span>
+    </div>
+
+    <div class="meters">
+      <span>words <b id="mWords">0</b></span>
+      <span>characters <b id="mChars">0</b></span>
+      <span>~tokens <b id="mTokens">0</b></span>
+      <span>utterances <b id="mUtter">0</b></span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Session log</h2>
+    <div class="log" id="log">
+      <p class="log-empty" id="logEmpty">Nothing captured yet. Finished phrases appear here with a timestamp and the recogniser's confidence score.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What this is, and what it isn't</h2>
+    <div class="col">
+      <p style="color:var(--muted)">This is <strong style="color:var(--ink)">stage one of four</strong>. It uses the browser's built-in <code>SpeechRecognition</code> API, which costs nothing and needs no server, which is why it runs on a static GitHub Pages site with no backend at all.</p>
+      <p style="color:var(--muted)">The remaining stages need infrastructure that does not exist yet:</p>
+    </div>
+    <div class="phases">
+      <div class="phase"><span class="phase-n">01</span><div><b>Speech to text.</b> <span>Web Speech API, in the browser. <strong style="color:var(--ok)">This demo.</strong></span></div></div>
+      <div class="phase"><span class="phase-n">02</span><div><b>Text to a tool call.</b> <span>An LLM picks the function and its arguments from the transcript. Needs a server holding an API key.</span></div></div>
+      <div class="phase"><span class="phase-n">03</span><div><b>Execute against data.</b> <span>The BFF runs the query. Needs Postgres and real factory data.</span></div></div>
+      <div class="phase"><span class="phase-n">04</span><div><b>Render or narrate.</b> <span>Show a table for lookups; call back into the model only when the answer needs prose.</span></div></div>
+    </div>
+    <div class="implication" style="margin-top:24px">
+      <span class="tag">Worth noting</span>
+      <p>Recognition quality here is what stage two receives. If material names and supplier names come through garbled, no amount of model quality downstream recovers them. Try your actual SKU vocabulary, not just clean sentences, and see what survives.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Privacy</h2>
+    <div class="notice">
+      <p><b>In Chrome and Edge, audio is sent to Google's speech servers for recognition.</b> It is not processed locally, despite the API living in the browser. Nothing is sent to any server of ours, because there isn't one: this page is static files.</p>
+      <p>Transcripts stay in the page and are lost on reload. Nothing is stored anywhere. For production with real procurement data, this is one of the reasons to consider a self-hosted speech model rather than the browser API.</p>
+    </div>
+  </section>
+
+  <footer>
+    Stage one of the voice reporting path. See <a href="./">System design</a> for how the rest fits together.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  var statusEl  = document.getElementById('status');
+  var micBtn    = document.getElementById('micBtn');
+  var micLabel  = document.getElementById('micLabel');
+  var langSel   = document.getElementById('lang');
+  var copyBtn   = document.getElementById('copyBtn');
+  var clearBtn  = document.getElementById('clearBtn');
+  var transEl   = document.getElementById('transcript');
+  var logEl     = document.getElementById('log');
+  var logEmpty  = document.getElementById('logEmpty');
+
+  var mWords  = document.getElementById('mWords');
+  var mChars  = document.getElementById('mChars');
+  var mTokens = document.getElementById('mTokens');
+  var mUtter  = document.getElementById('mUtter');
+
+  var finalText = '';
+  var interim = '';
+  var utterances = [];
+  var listening = false;
+  var wantListening = false;
+  var recognition = null;
+
+  function setStatus(kind, html) {
+    statusEl.className = 'demo-status ' + kind;
+    statusEl.innerHTML = html;
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function render() {
+    var hasAny = finalText.trim() || interim.trim();
+    if (!hasAny) {
+      transEl.innerHTML = '<span class="placeholder">Try: "show me steel rod consumption for the last three months"</span>';
+    } else {
+      transEl.innerHTML = esc(finalText)
+        + (interim ? '<span class="interim">' + esc(interim) + '</span>' : '')
+        + (listening ? '<span class="caret"></span>' : '');
+    }
+    var full = (finalText + interim).trim();
+    var words = full ? full.split(/\s+/).length : 0;
+    mWords.textContent = words;
+    mChars.textContent = full.length;
+    mTokens.textContent = Math.ceil(full.length / 4);
+    mUtter.textContent = utterances.length;
+    copyBtn.disabled = !full;
+    clearBtn.disabled = !full && utterances.length === 0;
+  }
+
+  function addUtterance(text, confidence) {
+    text = text.trim();
+    if (!text) return;
+    utterances.push({ text: text, confidence: confidence, at: new Date() });
+    if (logEmpty) { logEmpty.remove(); logEmpty = null; }
+    var row = document.createElement('div');
+    row.className = 'log-row';
+    var t = utterances[utterances.length - 1].at;
+    var hh = String(t.getHours()).padStart(2, '0');
+    var mm = String(t.getMinutes()).padStart(2, '0');
+    var ss = String(t.getSeconds()).padStart(2, '0');
+    var confTxt = (typeof confidence === 'number' && confidence > 0)
+      ? Math.round(confidence * 100) + '%' : '--';
+    row.innerHTML = '<time datetime="' + t.toISOString() + '">' + hh + ':' + mm + ':' + ss + '</time>'
+      + '<div>' + esc(text) + '</div>'
+      + '<div class="conf">' + confTxt + '</div>';
+    logEl.prepend(row);
+  }
+
+  function setListeningUI(on) {
+    micBtn.setAttribute('data-listening', on ? 'true' : 'false');
+    micLabel.textContent = on ? 'Stop listening' : 'Start listening';
+    langSel.disabled = on;
+  }
+
+  function build() {
+    var rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.lang = langSel.value;
+
+    rec.onstart = function () {
+      listening = true;
+      setListeningUI(true);
+      setStatus('ok', '<p><b>Listening.</b> Speak normally. Pauses are fine, recognition keeps running until you stop it.</p>');
+      render();
+    };
+
+    rec.onresult = function (e) {
+      interim = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        var res = e.results[i];
+        if (res.isFinal) {
+          var txt = res[0].transcript;
+          finalText += (finalText && !/\s$/.test(finalText) ? ' ' : '') + txt.trim();
+          addUtterance(txt, res[0].confidence);
+        } else {
+          interim += res[0].transcript;
+        }
+      }
+      render();
+    };
+
+    rec.onerror = function (e) {
+      if (e.error === 'no-speech' || e.error === 'aborted') return; // benign, onend handles restart
+      wantListening = false;
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        setStatus('bad', '<p><b>Microphone permission denied.</b> Allow microphone access for this site in your browser settings, then reload.</p>');
+      } else if (e.error === 'audio-capture') {
+        setStatus('bad', '<p><b>No microphone found.</b> Connect one and reload the page.</p>');
+      } else if (e.error === 'network') {
+        setStatus('bad', '<p><b>Recognition network error.</b> Chrome sends audio to Google servers for transcription, so this needs a working connection.</p>');
+      } else {
+        setStatus('bad', '<p><b>Recognition error:</b> ' + esc(e.error) + '</p>');
+      }
+    };
+
+    rec.onend = function () {
+      listening = false;
+      setListeningUI(false);
+      render();
+      // Chrome ends the session after a silence; restart if the user still wants to listen.
+      if (wantListening) {
+        try { rec.start(); } catch (err) { wantListening = false; }
+      } else if (statusEl.classList.contains('ok')) {
+        setStatus('ok', '<p><b>Stopped.</b> Press the button again to continue. Your transcript is kept until you clear it.</p>');
+      }
+    };
+
+    return rec;
+  }
+
+  // --- support detection -------------------------------------------------
+  if (!SR) {
+    setStatus('warn',
+      '<p><b>This browser has no Web Speech API.</b> Firefox does not implement <code>SpeechRecognition</code>. ' +
+      'Use Chrome or Edge (desktop or Android), or Safari 14.5+.</p>' +
+      '<p>You can still try the rest of the flow by typing a command below.</p>');
+    var fb = document.createElement('div');
+    fb.className = 'fallback';
+    fb.innerHTML = '<input id="fbInput" type="text" placeholder="Type a command instead" aria-label="Type a command">'
+      + '<button class="btn-min" id="fbBtn">Add</button>';
+    statusEl.parentNode.insertBefore(fb, statusEl.nextSibling);
+    document.getElementById('fbBtn').addEventListener('click', function () {
+      var input = document.getElementById('fbInput');
+      var v = input.value.trim();
+      if (!v) return;
+      finalText += (finalText ? ' ' : '') + v;
+      addUtterance(v, null);
+      input.value = '';
+      render();
+    });
+    document.getElementById('fbInput').addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') document.getElementById('fbBtn').click();
+    });
+  } else if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    setStatus('bad',
+      '<p><b>Microphone access needs a secure context.</b> This page is being served over <code>' +
+      esc(location.protocol) + '</code>. Open it over HTTPS or from localhost.</p>');
+  } else {
+    micBtn.disabled = false;
+    setStatus('ok',
+      '<p><b>Ready.</b> Press <b>Start listening</b> and allow microphone access when prompted.</p>' +
+      '<p>Language is set to English (India) by default, which handles Indian place and material names noticeably better than the US model.</p>');
+  }
+
+  micBtn.addEventListener('click', function () {
+    if (!SR) return;
+    if (wantListening) {
+      wantListening = false;
+      if (recognition) recognition.stop();
+      return;
+    }
+    recognition = build();
+    wantListening = true;
+    try {
+      recognition.start();
+    } catch (err) {
+      wantListening = false;
+      setStatus('bad', '<p><b>Could not start recognition:</b> ' + esc(err.message || String(err)) + '</p>');
+    }
+  });
+
+  copyBtn.addEventListener('click', function () {
+    var text = (finalText + interim).trim();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(function () {
+      copyBtn.textContent = 'Copied';
+      setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1400);
+    }, function () {
+      copyBtn.textContent = 'Failed';
+      setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1400);
+    });
+  });
+
+  clearBtn.addEventListener('click', function () {
+    finalText = '';
+    interim = '';
+    utterances = [];
+    logEl.innerHTML = '<p class="log-empty">Nothing captured yet. Finished phrases appear here with a timestamp and the recogniser\'s confidence score.</p>';
+    logEmpty = logEl.firstChild;
+    render();
+  });
+
+  langSel.addEventListener('change', function () {
+    if (recognition && !listening) recognition.lang = langSel.value;
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

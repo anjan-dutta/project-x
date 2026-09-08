@@ -32,6 +32,7 @@ enter as model features; they shift the parameters of those two distributions.
 | --- | --- |
 | `index.html` | The system design: the four layers, the decision math, the build sequence |
 | `market-research.html` | Published evidence on supply chain risk for Indian manufacturers under Rs 100 crore, with sources |
+| `demo.html` | Live speech-to-text demo, browser-only, no backend |
 | `style.css` | Shared design tokens and components for both pages |
 | `.nojekyll` | Skips Jekyll processing so files beginning with `_` are served as-is |
 
@@ -47,6 +48,16 @@ python3 -m http.server 8000
 Push to `main`. Pages serves the repository root directly via
 **Settings → Pages → Source: Deploy from a branch**, set to `main` at `/ (root)`.
 Builds appear in the Actions tab as `pages build and deployment`.
+
+## Demo
+
+`demo.html` runs the first stage of the voice reporting path: the browser's
+Web Speech API transcribing a spoken command onto the page. It needs no server,
+which is why it works on a static Pages site.
+
+Chrome or Edge required (Firefox does not implement `SpeechRecognition`), over
+HTTPS or localhost. Note that Chrome sends audio to Google's servers for
+recognition; it is not processed locally.
 
 ## Market research
 
