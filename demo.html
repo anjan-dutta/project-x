@@ -47,6 +47,12 @@
           <option value="hi-IN">Hindi</option>
           <option value="ta-IN">Tamil</option>
           <option value="mr-IN">Marathi</option>
+          <option value="bn-IN">Bengali</option>
+          <option value="te-IN">Telugu</option>
+          <option value="kn-IN">Kannada</option>
+          <option value="ml-IN">Malayalam</option>
+          <option value="gu-IN">Gujarati</option>
+          <option value="pa-IN">Punjabi</option>
         </select>
       </div>
 
@@ -126,7 +132,10 @@
   var mTokens = document.getElementById('mTokens');
   var mUtter  = document.getElementById('mUtter');
 
-  var finalText = '';
+  var finalText = '';      // committedText + the current session's final text
+  var committedText = '';  // text from recognition sessions that have ended
+  var sessionSegs = [];    // final segments of the current session
+  var loggedRows = [];     // log rows for sessionSegs, by index
   var interim = '';
   var utterances = [];
   var listening = false;
@@ -163,29 +172,66 @@
     clearBtn.disabled = !full && utterances.length === 0;
   }
 
+  function norm(s) {
+    return s.toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim();
+  }
+
+  function joinText(a, b) {
+    a = a.trim(); b = b.trim();
+    return a && b ? a + ' ' + b : a || b;
+  }
+
+  function stamp(t) {
+    return String(t.getHours()).padStart(2, '0') + ':'
+      + String(t.getMinutes()).padStart(2, '0') + ':'
+      + String(t.getSeconds()).padStart(2, '0');
+  }
+
+  function fillRow(row, u) {
+    var confTxt = (typeof u.confidence === 'number' && u.confidence > 0)
+      ? Math.round(u.confidence * 100) + '%' : '--';
+    row.innerHTML = '<time datetime="' + u.at.toISOString() + '">' + stamp(u.at) + '</time>'
+      + '<div lang="' + esc(u.lang) + '">' + esc(u.text) + '</div>'
+      + '<div class="conf">' + confTxt + '</div>';
+  }
+
   function addUtterance(text, confidence) {
     text = text.trim();
-    if (!text) return;
-    utterances.push({ text: text, confidence: confidence, at: new Date() });
+    if (!text) return null;
+    var u = { text: text, confidence: confidence, lang: langSel.value, at: new Date() };
+    utterances.push(u);
     if (logEmpty) { logEmpty.remove(); logEmpty = null; }
     var row = document.createElement('div');
     row.className = 'log-row';
-    var t = utterances[utterances.length - 1].at;
-    var hh = String(t.getHours()).padStart(2, '0');
-    var mm = String(t.getMinutes()).padStart(2, '0');
-    var ss = String(t.getSeconds()).padStart(2, '0');
-    var confTxt = (typeof confidence === 'number' && confidence > 0)
-      ? Math.round(confidence * 100) + '%' : '--';
-    row.innerHTML = '<time datetime="' + t.toISOString() + '">' + hh + ':' + mm + ':' + ss + '</time>'
-      + '<div>' + esc(text) + '</div>'
-      + '<div class="conf">' + confTxt + '</div>';
+    fillRow(row, u);
     logEl.prepend(row);
+    return { u: u, row: row };
+  }
+
+  // One log row per final segment of the current session; a segment that
+  // grows (cumulative result) updates its row rather than adding another.
+  function syncLog() {
+    sessionSegs.forEach(function (seg, i) {
+      var entry = loggedRows[i];
+      if (!entry) {
+        loggedRows[i] = addUtterance(seg.text, seg.confidence);
+      } else if (entry.u.text !== seg.text) {
+        entry.u.text = seg.text;
+        entry.u.confidence = seg.confidence;
+        fillRow(entry.row, entry.u);
+      }
+    });
+  }
+
+  function commitSession() {
+    committedText = finalText;
+    sessionSegs = [];
+    loggedRows = [];
   }
 
   function setListeningUI(on) {
     micBtn.setAttribute('data-listening', on ? 'true' : 'false');
     micLabel.textContent = on ? 'Stop listening' : 'Start listening';
-    langSel.disabled = on;
   }
 
   function build() {
@@ -202,18 +248,35 @@
       render();
     };
 
+    // Rebuild this session's transcript from the full results list on every
+    // event instead of appending from e.resultIndex. Chrome on Android
+    // re-delivers results it already marked final, and often sends cumulative
+    // finals ("show me", then "show me steel rod"); appending incrementally
+    // writes the same words twice.
     rec.onresult = function (e) {
+      var segs = [];
       interim = '';
-      for (var i = e.resultIndex; i < e.results.length; i++) {
+      for (var i = 0; i < e.results.length; i++) {
         var res = e.results[i];
-        if (res.isFinal) {
-          var txt = res[0].transcript;
-          finalText += (finalText && !/\s$/.test(finalText) ? ' ' : '') + txt.trim();
-          addUtterance(txt, res[0].confidence);
+        var txt = res[0].transcript.trim();
+        if (!txt) continue;
+        if (!res.isFinal) { interim += (interim ? ' ' : '') + txt; continue; }
+        var last = segs[segs.length - 1];
+        var n = norm(txt), nl = last ? norm(last.text) : '';
+        if (last && n.indexOf(nl) === 0) {
+          last.text = txt; last.confidence = res[0].confidence;   // cumulative: grows the previous one
+        } else if (last && nl.indexOf(n) === 0) {
+          // repeat of something already captured: skip
         } else {
-          interim += res[0].transcript;
+          segs.push({ text: txt, confidence: res[0].confidence });
         }
       }
+      if (interim && segs.length && norm(interim).indexOf(norm(segs[segs.length - 1].text)) === 0) {
+        interim = interim.slice(segs[segs.length - 1].text.length).trim();
+      }
+      sessionSegs = segs;
+      syncLog();
+      finalText = joinText(committedText, segs.map(function (s) { return s.text; }).join(' '));
       render();
     };
 
@@ -232,6 +295,10 @@
     };
 
     rec.onend = function () {
+      // Chrome sometimes ends a session without finalising the last phrase;
+      // keep it rather than dropping it on restart.
+      if (interim) { finalText = joinText(finalText, interim); addUtterance(interim, null); interim = ''; }
+      commitSession();
       listening = false;
       setListeningUI(false);
       render();
@@ -261,7 +328,7 @@
       var input = document.getElementById('fbInput');
       var v = input.value.trim();
       if (!v) return;
-      finalText += (finalText ? ' ' : '') + v;
+      finalText = committedText = joinText(finalText, v);
       addUtterance(v, null);
       input.value = '';
       render();
@@ -277,7 +344,7 @@
     micBtn.disabled = false;
     setStatus('ok',
       '<p><b>Ready.</b> Press <b>Start listening</b> and allow microphone access when prompted.</p>' +
-      '<p>Language is set to English (India) by default, which handles Indian place and material names noticeably better than the US model.</p>');
+      '<p>Language is set to English (India) by default, which handles Indian place and material names noticeably better than the US model. Pick Hindi, Tamil or another language to get text in that script; you can switch while listening.</p>');
   }
 
   micBtn.addEventListener('click', function () {
@@ -310,16 +377,22 @@
   });
 
   clearBtn.addEventListener('click', function () {
-    finalText = '';
+    finalText = committedText = '';
     interim = '';
+    sessionSegs = [];
+    loggedRows = [];
     utterances = [];
     logEl.innerHTML = '<p class="log-empty">Nothing captured yet. Finished phrases appear here with a timestamp and the recogniser\'s confidence score.</p>';
     logEmpty = logEl.firstChild;
     render();
   });
 
+  // Switching language while listening restarts recognition in the new
+  // language; text already captured stays in the language it was spoken in.
   langSel.addEventListener('change', function () {
-    if (recognition && !listening) recognition.lang = langSel.value;
+    if (!recognition) return;
+    recognition.lang = langSel.value;
+    if (wantListening) recognition.stop();   // onend restarts with the new lang
   });
 
   render();
