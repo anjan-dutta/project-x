@@ -33,7 +33,7 @@ enter as model features; they shift the parameters of those two distributions.
 | `index.html` | The system design: the four layers, the decision math, the build sequence |
 | `market-research.html` | Published evidence on supply chain risk for Indian manufacturers under Rs 100 crore, with sources |
 | `demo.html` | Live speech-to-text demo, browser-only, no backend |
-| `shrimedh.html` | Redirects to the ShriMedh International website design demo |
+| `shrimedh.html` | ShriMedh International website design demo, self-contained, no build step |
 | `style.css` | Shared design tokens and components for both pages |
 | `.nojekyll` | Skips Jekyll processing so files beginning with `_` are served as-is |
 
