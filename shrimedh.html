@@ -192,7 +192,7 @@ blockquote { margin: 0; font-size: clamp(1.15rem, 2vw, 1.45rem); line-height: 1.
 .card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 26px; display: grid; gap: 12px; align-content: start; }
 .card p, .card li { color: var(--slate); font-size: .95rem; }
 .card ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
-.facts { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.facts { display: grid; gap: 0; border-top: 1px solid var(--line); align-content: start; margin: 0; }
 .facts div { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: .95rem; }
 .facts dt { font-weight: 600; color: var(--navy); }
 .facts dd { margin: 0; color: var(--slate); }
@@ -320,12 +320,60 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
 .done .tick { width: 64px; height: 64px; border-radius: 50%; background: var(--emerald-tint); display: grid; place-items: center; }
 .done ul { text-align: left; color: var(--slate); font-size: .9rem; display: grid; gap: 6px; }
 
+/* Blueprint imagery */
+figure.slide { margin: 0; display: grid; gap: 10px; }
+figure.slide .zoom { display: block; padding: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--mist); cursor: zoom-in; box-shadow: 0 12px 32px -18px rgba(13,27,46,.35); transition: box-shadow .2s, transform .2s; }
+figure.slide .zoom:hover { box-shadow: 0 18px 40px -16px rgba(13,27,46,.45); transform: translateY(-2px); }
+figure.slide img { display: block; width: 100%; height: auto; aspect-ratio: 1376 / 768; object-fit: cover; }
+figure.slide figcaption { font-size: .85rem; color: var(--slate); }
+.on-navy figure.slide figcaption { color: var(--on-navy-mute); }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 48px; align-items: center; }
+.split.rev { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+@media (max-width: 860px) { .split, .split.rev { grid-template-columns: minmax(0, 1fr); } }
+.hero-img { margin: 0; display: grid; gap: 10px; }
+.hero-img img { display: block; width: 100%; height: auto; aspect-ratio: 730 / 428; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 30px 60px -30px rgba(0,0,0,.6); }
+.hero-img figcaption { font-family: var(--f-mono); font-size: .7rem; color: var(--on-navy-mute); letter-spacing: .04em; }
+.portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.portrait .badge { z-index: 1; }
+.portrait-sm { max-width: 260px; aspect-ratio: 4 / 5; border-radius: 4px; overflow: hidden; background: var(--navy); }
+.portrait-sm img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-src { font-family: var(--f-mono); font-size: .7rem; color: var(--slate); }
+
+/* Slide carousel */
+.carousel { display: grid; gap: 16px; }
+.car-view { position: relative; overflow: hidden; border-radius: 8px; border: 1px solid rgba(255,255,255,.14); background: #EEF1F5; aspect-ratio: 1376 / 768; max-width: 100%; }
+.car-track { display: flex; height: 100%; transition: transform .45s cubic-bezier(.2,.7,.2,1); }
+.car-track figure { flex: 0 0 100%; margin: 0; height: 100%; }
+.car-track img { width: 100%; height: 100%; object-fit: contain; display: block; cursor: zoom-in; }
+.car-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: 0; background: rgba(13,27,46,.82); color: #fff; font-size: 1.3rem; cursor: pointer; display: grid; place-items: center; }
+.car-btn:hover { background: var(--emerald-btn); }
+.car-btn.prev { left: 12px; } .car-btn.next { right: 12px; }
+.car-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.car-cap { display: grid; gap: 2px; min-width: 0; }
+.car-cap b { color: #fff; font-size: 1.05rem; }
+.car-cap span { color: var(--on-navy-mute); font-size: .9rem; }
+.car-count { font-family: var(--f-mono); font-size: .8rem; color: var(--gold); font-variant-numeric: tabular-nums; }
+.car-dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.car-dots button { width: 28px; height: 6px; border-radius: 3px; border: 0; background: rgba(255,255,255,.25); cursor: pointer; padding: 0; }
+.car-dots button[aria-current="true"] { background: var(--gold); }
+.car-thumbs { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; }
+.car-thumbs button { padding: 0; border: 2px solid transparent; border-radius: 4px; overflow: hidden; cursor: pointer; background: none; opacity: .55; transition: opacity .15s; }
+.car-thumbs button[aria-current="true"] { border-color: var(--gold); opacity: 1; }
+.car-thumbs button:hover { opacity: 1; }
+.car-thumbs img { display: block; width: 100%; aspect-ratio: 1376 / 768; object-fit: cover; }
+@media (max-width: 760px) { .car-thumbs { display: none; } .car-btn { width: 38px; height: 38px; } }
+
+/* Lightbox */
+.lightbox { position: fixed; inset: 0; z-index: 120; background: rgba(13,27,46,.92); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); cursor: zoom-out; }
+.lightbox img { max-width: min(1376px, 100%); max-height: 100%; width: auto; height: auto; border-radius: 6px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.lightbox .x { position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); }
+
 [data-page] { display: none; }
 [data-page].on { display: block; }
 </style>
 </head>
 <body>
-<div class="demo-flag">Design demo for review · sample availability, placeholder imagery and contact details marked "to confirm"</div>
+<div class="demo-flag">Design demo for review · sample availability; imagery from the ShriMedh Digital Strategy Blueprint; contact details marked "to confirm"</div>
 
 <div class="topbar band"><div class="row">
   <span>New Delhi, India · Serving clients across India, US, Europe and Asia-Pacific</span>
@@ -360,7 +408,7 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     <div class="inner">
       <div class="hero-copy">
         <p class="eyebrow">Supply Chain &amp; Advisory Services</p>
-        <h1>Reliable operations. Smarter logistics. <em>Stronger market access.</em></h1>
+        <h1>Integrated supply chain and logistics solutions <em>you can trust.</em></h1>
         <p class="lede">Helping businesses streamline sourcing, warehousing, distribution, import-export operations, regulatory compliance and corporate transformations, with practical, scalable solutions across India and international markets.</p>
         <div class="hero-ctas">
           <button class="btn btn-primary" data-book>
@@ -375,33 +423,10 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
           <div><b>5</b><span>regulated industries served</span></div>
         </div>
       </div>
-      <div class="panels" aria-label="Hero imagery: freight, cold-chain warehousing and advisory">
-        <div class="panel">
-          <svg class="scene" viewBox="0 0 120 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <g stroke="#3F6A9C" stroke-width="1" fill="none"><path d="M0 150h120"/><path d="M10 150v-26h40v26M50 150v-38h40v38M30 124v-18h40v18"/><path d="M60 112v-14h30v14"/></g>
-            <path d="M5 165 C30 158 90 158 115 165" stroke="#00A86B" stroke-width="1.2" fill="none" opacity=".7"/>
-            <path d="M18 60 l40 -14 l14 4 l-36 16z" fill="#3F6A9C" opacity=".8"/><path d="M48 50 l18 -18 h6 l-8 22z" fill="#3F6A9C" opacity=".6"/>
-          </svg>
-          <p class="cap"><b>01</b>Air &amp; sea freight</p>
-        </div>
-        <div class="panel">
-          <svg class="scene" viewBox="0 0 120 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <g stroke="#3F6A9C" stroke-width="1" fill="none"><path d="M14 40v130M54 40v130M66 40v130M106 40v130"/><path d="M14 70h40M14 100h40M14 130h40M66 70h40M66 100h40M66 130h40"/></g>
-            <g fill="#2B5584"><rect x="18" y="56" width="14" height="12"/><rect x="34" y="86" width="16" height="12"/><rect x="70" y="56" width="16" height="12"/><rect x="88" y="116" width="14" height="12"/><rect x="18" y="116" width="14" height="12"/></g>
-            <text x="60" y="30" fill="#00A86B" font-family="IBM Plex Mono, monospace" font-size="9" text-anchor="middle">2–8 °C</text>
-          </svg>
-          <p class="cap"><b>02</b>GWP/GDP cold chain</p>
-        </div>
-        <div class="panel">
-          <svg class="scene" viewBox="0 0 120 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <ellipse cx="60" cy="120" rx="44" ry="14" fill="none" stroke="#3F6A9C"/>
-            <g fill="#2B5584"><circle cx="24" cy="96" r="7"/><circle cx="48" cy="90" r="7"/><circle cx="72" cy="90" r="7"/><circle cx="96" cy="96" r="7"/></g>
-            <g stroke="#00A86B" fill="none" stroke-width="1.2"><path d="M30 50 h60"/><path d="M34 46v-12M48 46v-20M62 46v-8M76 46v-26"/></g>
-          </svg>
-          <p class="cap"><b>03</b>Executive advisory</p>
-        </div>
-        <p class="img-note">Placeholder art. Final: 3-panel photographic composite, WebP 1920×1080, navy overlay.</p>
-      </div>
+      <figure class="hero-img">
+        <img src="shrimedh-assets/hero-operations.webp" alt="Isometric illustration: a warehouse floor with containers and racking linked by data lines to an executive boardroom, captioned Reliable Operations, Smarter Logistics, Stronger Market Access" width="730" height="428" fetchpriority="high">
+        <figcaption>From the warehouse floor to the boardroom</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -410,7 +435,9 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
       <div class="sec-head">
         <p class="eyebrow">What we do</p>
         <h2>Hands-on supply chain execution and strategic corporate advisory, under one roof</h2>
+        <p class="lede">Three pillars on one value creation platform: <b>Build</b> your India entry, <b>Run</b> end-to-end logistics, and <b>Transform</b> through restructuring and advisory.</p>
       </div>
+      <figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-04-three-pillars.webp" data-alt="The 3-pillar service architecture: Build (India entry and setup), Run (end-to-end logistics) and Transform (restructuring and advisory) supporting a value creation platform" aria-label="Enlarge image: The 3-pillar service architecture: Build (India entry and setup), Run (end-to-end logistics) and Transform (restructuring and advisory) supporting a value creation platform"><img src="shrimedh-assets/slide-04-three-pillars.webp" alt="The 3-pillar service architecture: Build (India entry and setup), Run (end-to-end logistics) and Transform (restructuring and advisory) supporting a value creation platform" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>The 3-pillar service architecture</figcaption></figure>
       <div class="pillars">
         <a class="pillar" href="#osce" data-nav="osce">
           <svg class="ico" viewBox="0 0 44 44" fill="none" stroke-width="1.8" aria-hidden="true"><circle cx="22" cy="22" r="18" stroke="#1B365D"/><circle cx="22" cy="22" r="7" stroke="#00A86B"/><path d="M22 4v6M22 34v6M4 22h6M34 22h6" stroke="#1B365D"/></svg>
@@ -453,11 +480,32 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     </div>
   </section>
 
+  <section class="band navy on-navy" id="glance">
+    <div class="inner">
+      <div class="sec-head">
+        <p class="eyebrow">ShriMedh at a glance</p>
+        <h2>How we build, run and transform supply chains</h2>
+        <p class="lede">Nine slides from the ShriMedh blueprint. Use the arrows, swipe, or select a slide to enlarge it.</p>
+      </div>
+      <div class="carousel" id="carousel" role="region" aria-roledescription="carousel" aria-label="ShriMedh at a glance">
+        <div class="car-view">
+          <div class="car-track" id="carTrack" aria-live="polite"></div>
+          <button class="car-btn prev" id="carPrev" aria-label="Previous slide">‹</button>
+          <button class="car-btn next" id="carNext" aria-label="Next slide">›</button>
+        </div>
+        <div class="car-bar">
+          <div class="car-cap" id="carCap"></div>
+          <span class="car-count" id="carCount"></span>
+        </div>
+        <div class="car-thumbs" id="carThumbs"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="band ink on-navy">
     <div class="inner founder">
       <div class="portrait">
-        <span class="ph">Portrait placeholder · 800×1000</span>
-        <span class="mono">IS</span>
+        <img src="shrimedh-assets/founder-indresh-sati.webp" alt="Portrait of Indresh Sati, Founder of ShriMedh International" width="288" height="380" loading="lazy">
         <div class="badge"><b>30+</b><span>Years of Operational Excellence in Global Logistics, Pharma &amp; Medical Devices</span></div>
       </div>
       <div class="founder-copy">
@@ -493,6 +541,7 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
   </div></section>
   <section class="band"><div class="inner grid-2">
     <div style="display:grid;gap:18px">
+      <div class="portrait-sm"><img src="shrimedh-assets/founder-indresh-sati.webp" alt="Portrait of Indresh Sati" width="288" height="380" loading="lazy"></div>
       <p class="eyebrow">Founder profile</p>
       <h2>Indresh Sati</h2>
       <p class="lede">Internationally experienced supply chain leader with more than 30 years in logistics, pharmaceutical and medical device manufacturing. Skilled in DMAIC methodology, operations management, international business, turnarounds and sustainable performance improvement.</p>
@@ -507,13 +556,21 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     </dl>
   </div></section>
   <section class="band mist"><div class="inner">
-    <div class="sec-head"><p class="eyebrow">Why ShriMedh</p><h2>Core differentiators</h2></div>
+    <div class="split">
+      <div class="sec-head"><p class="eyebrow">Why ShriMedh</p><h2>The competitive sweet spot</h2><p class="lede">Traditional 3PLs execute on the ground; pure-play strategy firms advise the C-suite. ShriMedh combines Indian execution, C-suite advisory, niche pharma/GMP regulatory depth and end-to-end accountability.</p></div>
+      <figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-11-competitive-sweet-spot.webp" data-alt="Comparison matrix: traditional 3PLs and pure-play strategy consultancies each cover part of the capability set; ShriMedh International covers on-the-ground Indian execution, C-suite advisory, niche regulatory and end-to-end accountability" aria-label="Enlarge image: Comparison matrix: traditional 3PLs and pure-play strategy consultancies each cover part of the capability set; ShriMedh International covers on-the-ground Indian execution, C-suite advisory, niche regulatory and end-to-end accountability"><img src="shrimedh-assets/slide-11-competitive-sweet-spot.webp" alt="Comparison matrix: traditional 3PLs and pure-play strategy consultancies each cover part of the capability set; ShriMedh International covers on-the-ground Indian execution, C-suite advisory, niche regulatory and end-to-end accountability" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>ShriMedh compared with 3PLs and strategy consultancies</figcaption></figure>
+    </div>
+    <h3 style="margin-top:8px">Core differentiators</h3>
     <div class="grid-3" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
       <div class="card"><h3>Practical execution focus</h3><p>Recommendations come with SOPs, trained teams and KPI tracking, not just a report.</p></div>
       <div class="card"><h3>Indian regulatory fluency</h3><p>Working knowledge of the Drugs Ministry, Customs, SVB and GST requirements that shape operations in India.</p></div>
       <div class="card"><h3>Data-driven DMAIC mindset</h3><p>Every engagement starts from a measured baseline and ends with governed KPIs.</p></div>
       <div class="card"><h3>Transparent communication</h3><p>Clear, regular reporting to boards, lenders, shareholders and operating teams.</p></div>
     </div>
+  </div></section>
+  <section class="band"><div class="inner split rev">
+    <figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-14-value-ecosystem.webp" data-alt="The ShriMedh value ecosystem: the OSCE framework at the centre, connected to Build (India entry), Run (logistics) and Transform (restructuring)" aria-label="Enlarge image: The ShriMedh value ecosystem: the OSCE framework at the centre, connected to Build (India entry), Run (logistics) and Transform (restructuring)"><img src="shrimedh-assets/slide-14-value-ecosystem.webp" alt="The ShriMedh value ecosystem: the OSCE framework at the centre, connected to Build (India entry), Run (logistics) and Transform (restructuring)" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>The ShriMedh value ecosystem</figcaption></figure>
+    <div class="sec-head"><p class="eyebrow">How it fits together</p><h2>One ecosystem, with OSCE at the centre</h2><p class="lede">Build, Run and Transform engagements all draw on the same operating discipline, so a client entering India, scaling operations or restructuring works from one set of standards.</p></div>
   </div></section>
 </div>
 
@@ -530,6 +587,10 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     </div>
     <div class="phase-panel" id="phasePanel" aria-live="polite"></div>
   </div></section>
+  <section class="band navy on-navy"><div class="inner split rev">
+    <figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-08-osce-engine.webp" data-alt="The engine of excellence: the OSCE framework drawn as a wheel of study, baseline, roadmap, train and govern stages around the outcomes lower cost-to-serve, higher service level and dependable OTIF" aria-label="Enlarge image: The engine of excellence: the OSCE framework drawn as a wheel of study, baseline, roadmap, train and govern stages around the outcomes lower cost-to-serve, higher service level and dependable OTIF"><img src="shrimedh-assets/slide-08-osce-engine.webp" alt="The engine of excellence: the OSCE framework drawn as a wheel of study, baseline, roadmap, train and govern stages around the outcomes lower cost-to-serve, higher service level and dependable OTIF" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>The engine of excellence: the OSCE framework</figcaption></figure>
+    <div class="sec-head"><p class="eyebrow">The engine of excellence</p><h2>Outcomes at the core</h2><p class="lede">Every phase turns toward the same three results: lower cost-to-serve, a higher service level and dependable On-Time-In-Full delivery.</p></div>
+  </div></section>
   <section class="band mist"><div class="inner">
     <div class="sec-head"><p class="eyebrow">Phase detail</p><h2>Objectives and deliverables</h2></div>
     <div class="table-wrap"><table>
@@ -538,7 +599,8 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     </table></div>
   </div></section>
   <section class="band"><div class="inner">
-    <div class="sec-head"><p class="eyebrow">Strategy toolkit</p><h2>The foundations beneath the six phases</h2><p class="lede">Beyond execution, OSCE aligns supply chain strategy with the business before a single SOP is written.</p></div>
+    <div class="sec-head"><p class="eyebrow">Strategy toolkit</p><h2>The foundations beneath the six phases</h2><p class="lede">Beyond execution, OSCE aligns supply chain strategy with the business before a single SOP is written. A methodology built and refined over 20 years.</p></div>
+    <figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-09-strategy-toolkit.webp" data-alt="The strategic toolkit as a staircase: corporate and business strategy summary, supply chain vision and values, strategic objectives, team and budget alignment, make-or-buy decisions, and Kraljic matrix and execution pillars, rising to board-level strategic alignment" aria-label="Enlarge image: The strategic toolkit as a staircase: corporate and business strategy summary, supply chain vision and values, strategic objectives, team and budget alignment, make-or-buy decisions, and Kraljic matrix and execution pillars, rising to board-level strategic alignment"><img src="shrimedh-assets/slide-09-strategy-toolkit.webp" alt="The strategic toolkit as a staircase: corporate and business strategy summary, supply chain vision and values, strategic objectives, team and budget alignment, make-or-buy decisions, and Kraljic matrix and execution pillars, rising to board-level strategic alignment" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>The strategic toolkit, rising to board-level alignment</figcaption></figure>
     <ol class="toolkit">
       <li>Corporate / business strategy alignment</li>
       <li>Supply chain vision, mission &amp; values</li>
@@ -563,7 +625,10 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     <div class="tabpanel" role="tabpanel" id="tabpanel" tabindex="0"></div>
   </div></section>
   <section class="band mist"><div class="inner">
-    <div class="sec-head"><p class="eyebrow">How it connects</p><h2>The lifecycle these modules cover</h2></div>
+    <div class="split">
+      <div class="sec-head"><p class="eyebrow">How it connects</p><h2>The lifecycle these modules cover</h2><p class="lede">Physical flow (sourcing, international movement, warehousing, distribution) and commercial flow (order-to-cash, billing, GST/GMP compliance, returns) run as one continuous loop.</p></div>
+      <figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-06-pillar-run.webp" data-alt="Pillar 2, Run: an infinity loop linking sourcing, international movement, warehouse and cold chain, and domestic distribution with order-to-cash, billing and invoicing, compliance and returns and HSE destruction" aria-label="Enlarge image: Pillar 2, Run: an infinity loop linking sourcing, international movement, warehouse and cold chain, and domestic distribution with order-to-cash, billing and invoicing, compliance and returns and HSE destruction"><img src="shrimedh-assets/slide-06-pillar-run.webp" alt="Pillar 2, Run: an infinity loop linking sourcing, international movement, warehouse and cold chain, and domestic distribution with order-to-cash, billing and invoicing, compliance and returns and HSE destruction" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>Pillar 2, Run: the end-to-end logistics flow</figcaption></figure>
+    </div>
     <div class="lifecycle" tabindex="0" aria-label="Supply chain lifecycle, scrollable"><div class="lc-track" id="lcTrack2"></div></div>
   </div></section>
 </div>
@@ -574,6 +639,10 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     <p class="crumbs">Home / Corporate Restructuring</p>
     <h1>Restructuring, wind-up and rebranding advisory</h1>
     <p class="lede">For boards, management teams and investors navigating financial stress, organisational wind-downs or a change of corporate identity.</p>
+  </div></section>
+  <section class="band mist"><div class="inner split">
+    <div class="sec-head"><p class="eyebrow">Pillar 3 · Transform</p><h2>From financial stress back to value</h2><p class="lede">ShriMedh steps in at the low point: feasibility planning, debt refinancing and workouts, then governance and stakeholder consensus, ending in value preservation, continuity and a clean rebrand where needed.</p></div>
+    <figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-07-pillar-transform.webp" data-alt="Pillar 3, Transform: enterprise value over time falls with financial stress, turns at the ShriMedh intervention, and rises through feasibility planning, debt refinancing, governance and consensus to value preservation and rebranding" aria-label="Enlarge image: Pillar 3, Transform: enterprise value over time falls with financial stress, turns at the ShriMedh intervention, and rises through feasibility planning, debt refinancing, governance and consensus to value preservation and rebranding"><img src="shrimedh-assets/slide-07-pillar-transform.webp" alt="Pillar 3, Transform: enterprise value over time falls with financial stress, turns at the ShriMedh intervention, and rises through feasibility planning, debt refinancing, governance and consensus to value preservation and rebranding" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>Pillar 3, Transform: the restructuring curve</figcaption></figure>
   </div></section>
   <section class="band"><div class="inner grid-3">
     <div class="card"><p class="eyebrow">01 · Turnaround</p><h3>Corporate restructuring</h3><ul><li>Comprehensive diagnostic assessments</li><li>Financial stress identification</li><li>Feasibility studies</li><li>Debt restructuring</li><li>Balance-sheet optimisation</li><li>Lender and shareholder negotiations</li></ul></div>
@@ -600,6 +669,10 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     <p class="lede">Industry-tailored capability where compliance, temperature and traceability decide whether product moves.</p>
   </div></section>
   <section class="band"><div class="inner"><div class="ind-grid" id="indGrid"></div></div></section>
+  <section class="band mist"><div class="inner split rev">
+    <figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-12-regulatory-compliance.webp" data-alt="Regulatory and compliance rings around the client business and cash flow: operational compliance, statutory compliance and corporate governance, covering GWP/GDP, GST, transfer pricing, customs and SVB, Ministry of Health and board packs" aria-label="Enlarge image: Regulatory and compliance rings around the client business and cash flow: operational compliance, statutory compliance and corporate governance, covering GWP/GDP, GST, transfer pricing, customs and SVB, Ministry of Health and board packs"><img src="shrimedh-assets/slide-12-regulatory-compliance.webp" alt="Regulatory and compliance rings around the client business and cash flow: operational compliance, statutory compliance and corporate governance, covering GWP/GDP, GST, transfer pricing, customs and SVB, Ministry of Health and board packs" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>Three rings of compliance around the client business</figcaption></figure>
+    <div class="sec-head"><p class="eyebrow">Regulatory &amp; compliance excellence</p><h2>Protection in three rings</h2><p class="lede">Operational compliance (GWP/GDP aligned with GMP, HSE product destruction), statutory compliance (GST, transfer pricing, customs and SVB) and corporate governance (Ministry of Health, cross-border debt workouts, board packs).</p></div>
+  </div></section>
 </div>
 
 <!-- ============ CONTACT ============ -->
@@ -675,6 +748,11 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
   Book a call
 </button>
 
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Enlarged image">
+  <img id="lbImg" alt="">
+  <button class="x" id="lbClose" aria-label="Close image">✕</button>
+</div>
+
 <div class="modal-back" id="modalBack" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
     <div class="modal-head">
@@ -706,9 +784,11 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     const a = e.target.closest('[data-nav]');
     if (!a) return;
     e.preventDefault();
-    try { history.replaceState(null, '', '#' + a.dataset.nav); } catch (_) {}
+    try { history.pushState(null, '', '#' + a.dataset.nav); } catch (_) {}
     show(a.dataset.nav, a.dataset.tab);
   });
+  window.addEventListener('popstate', () => show((location.hash || '').slice(1)));
+  window.addEventListener('hashchange', () => show((location.hash || '').slice(1)));
   $('#menuBtn').addEventListener('click', () => {
     const open = $('#primaryNav').classList.toggle('open');
     $('#menuBtn').setAttribute('aria-expanded', String(open));
@@ -817,7 +897,7 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     $$('#tablist [role=tab]').forEach((b, k) => { b.setAttribute('aria-selected', String(k === i)); b.tabIndex = k === i ? 0 : -1; });
     const m = modules[i];
     $('#tabpanel').setAttribute('aria-labelledby', 'tab' + i);
-    $('#tabpanel').innerHTML = `<p class="eyebrow">Module ${i + 1} of 5</p><h2>${m[0]}</h2><p class="lede">${m[1]}</p><ul>${m[2].map(x => `<li>${x}</li>`).join('')}</ul>
+    $('#tabpanel').innerHTML = `<p class="eyebrow">Module ${i + 1} of 5</p><h2>${m[0]}</h2><p class="lede">${m[1]}</p><ul>${m[2].map(x => `<li>${x}</li>`).join('')}</ul>${i === 1 ? `<figure class="slide"><button class="zoom" type="button" data-zoom="shrimedh-assets/slide-05-pillar-build.webp" data-alt="Pillar 1, Build: a bridge from a global entrant to operational readiness in India built from warehousing solutions, regulatory compliance, SVB and customs guidance, SOP setup and ERP/WMS implementation" aria-label="Enlarge image: Pillar 1, Build: a bridge from a global entrant to operational readiness in India built from warehousing solutions, regulatory compliance, SVB and customs guidance, SOP setup and ERP/WMS implementation"><img src="shrimedh-assets/slide-05-pillar-build.webp" alt="Pillar 1, Build: a bridge from a global entrant to operational readiness in India built from warehousing solutions, regulatory compliance, SVB and customs guidance, SOP setup and ERP/WMS implementation" width="1376" height="768" loading="lazy" decoding="async"></button><figcaption>Pillar 1, Build: India entry and facility enablement</figcaption></figure>` : ''}
       <div><button class="btn btn-primary" data-book data-focus="${i}">Discuss this module</button></div>`;
   }
   $('#tablist').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) selectTab(+b.dataset.t); });
@@ -992,6 +1072,47 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--emerald); o
     if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
     else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
   });
+
+  /* ---------- Lightbox ---------- */
+  const lb = $('#lightbox'); let lbReturn = null;
+  function zoom(src, alt) { lbReturn = document.activeElement; $('#lbImg').src = src; $('#lbImg').alt = alt || ''; lb.hidden = false; $('#lbClose').focus(); }
+  function unzoom() { lb.hidden = true; if (lbReturn) lbReturn.focus(); }
+  document.addEventListener('click', e => { const z = e.target.closest('[data-zoom]'); if (z) zoom(z.dataset.zoom, z.dataset.alt); });
+  lb.addEventListener('click', unzoom);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lb.hidden) unzoom(); });
+
+  /* ---------- Slide carousel ---------- */
+  const A = 'shrimedh-assets/';
+  const deck = [
+    ['slide-05-pillar-build.webp', 'Pillar 1: Build', 'India entry and facility enablement, from global entrant to operational readiness'],
+    ['slide-06-pillar-run.webp', 'Pillar 2: Run', 'The end-to-end logistics flow, physical and commercial'],
+    ['slide-07-pillar-transform.webp', 'Pillar 3: Transform', 'Corporate restructuring and advisory, from stress back to value'],
+    ['slide-08-osce-engine.webp', 'The engine of excellence', 'The OSCE framework and the outcomes at its core'],
+    ['slide-09-strategy-toolkit.webp', 'The strategic toolkit', 'A methodology built and refined over 20 years'],
+    ['slide-10-leadership.webp', 'The leadership advantage', 'Indresh Sati: 30+ years in logistics, pharma and medical devices'],
+    ['slide-11-competitive-sweet-spot.webp', 'The competitive sweet spot', 'Execution, advisory, regulatory depth and accountability together'],
+    ['slide-12-regulatory-compliance.webp', 'Regulatory & compliance excellence', 'Operational, statutory and governance protection'],
+    ['slide-14-value-ecosystem.webp', 'The ShriMedh value ecosystem', 'Build, Run and Transform connected through OSCE']
+  ];
+  let ci = 0;
+  $('#carTrack').innerHTML = deck.map((d, i) => `<figure role="group" aria-roledescription="slide" aria-label="${i + 1} of ${deck.length}: ${d[1]}"><img src="${A}${d[0]}" alt="${d[1]}: ${d[2]}" width="1376" height="768" ${i ? 'loading="lazy"' : ''} data-zoom="${A}${d[0]}" data-alt="${d[1]}"></figure>`).join('');
+  $('#carThumbs').innerHTML = deck.map((d, i) => `<button aria-label="Show slide ${i + 1}: ${d[1]}" data-go="${i}"><img src="${A}${d[0]}" alt="" loading="lazy"></button>`).join('');
+  function go(i) {
+    ci = (i + deck.length) % deck.length;
+    $('#carTrack').style.transform = `translateX(-${ci * 100}%)`;
+    $('#carCap').innerHTML = `<b>${deck[ci][1]}</b><span>${deck[ci][2]}</span>`;
+    $('#carCount').textContent = `${String(ci + 1).padStart(2, '0')} / ${String(deck.length).padStart(2, '0')}`;
+    $$('#carThumbs button').forEach((b, k) => b.setAttribute('aria-current', String(k === ci)));
+    $$('#carTrack figure').forEach((f, k) => f.setAttribute('aria-hidden', String(k !== ci)));
+  }
+  $('#carPrev').addEventListener('click', () => go(ci - 1));
+  $('#carNext').addEventListener('click', () => go(ci + 1));
+  $('#carThumbs').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(+b.dataset.go); });
+  $('#carousel').addEventListener('keydown', e => { if (e.key === 'ArrowLeft') go(ci - 1); if (e.key === 'ArrowRight') go(ci + 1); });
+  let tx = null;
+  $('.car-view').addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  $('.car-view').addEventListener('touchend', e => { if (tx == null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 40) go(ci + (dx < 0 ? 1 : -1)); tx = null; });
+  go(0);
 
   /* ---------- Boot ---------- */
   const h = (location.hash || '').slice(1);
