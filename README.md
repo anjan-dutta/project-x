@@ -34,6 +34,7 @@ enter as model features; they shift the parameters of those two distributions.
 | `market-research.html` | Published evidence on supply chain risk for Indian manufacturers under Rs 100 crore, with sources |
 | `demo.html` | Live speech-to-text demo, browser-only, no backend |
 | `shrimedh.html` | ShriMedh International website design demo, self-contained, no build step |
+| `shrimedh-assets/` | Images for the ShriMedh demo, taken from the ShriMedh Digital Strategy Blueprint |
 | `style.css` | Shared design tokens and components for both pages |
 | `.nojekyll` | Skips Jekyll processing so files beginning with `_` are served as-is |
 
