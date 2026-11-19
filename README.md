@@ -35,6 +35,12 @@ enter as model features; they shift the parameters of those two distributions.
 | `demo.html` | Live speech-to-text demo, browser-only, no backend |
 | `shrimedh.html` | ShriMedh International website design demo, self-contained, no build step |
 | `shrimedh-assets/` | Images for the ShriMedh demo, taken from the ShriMedh Digital Strategy Blueprint |
+
+ShriMedh quick edits, all near the top of the `<script>` in `shrimedh.html`:
+
+- **Framework name:** `FRAMEWORK` (`name`, `short`). The retired "OSCE" name is not used anywhere.
+- **Videos:** `VIDEOS`. Paste each YouTube ID into `youtube`; until then the card shows "Coming soon". Videos load only on click and play in an on-page player.
+- **Founders and booking cards:** `FOUNDERS`. Set `photo` for the Tech Founder once a portrait is ready.
 | `style.css` | Shared design tokens and components for both pages |
 | `.nojekyll` | Skips Jekyll processing so files beginning with `_` are served as-is |
 
